@@ -1,5 +1,6 @@
 # dataset
 data/fma_metadata.zip
+data/fma_metadata/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
