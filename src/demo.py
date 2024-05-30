@@ -3,11 +3,9 @@ import pandas as pd
 
 # import numpy as np
 import time
-from testpdf import test_func
+from inverseIndexRAM import test_func
 
 
-# def greet(name, intensity):
-#     return "Hello, " + name + "!" * intensity
 def dummy_df():
     dummydf = pd.DataFrame(
         {
@@ -71,28 +69,5 @@ with gr.Blocks(title="Proyecto 2") as demo:
         outputs=[dfResult, timeLabel],
     )
 
-    # demo = gr.Interface(
-    #     title="Proyecto 2",
-    #     article="Execution time: ... seconds",
-    #     fn=executeQuery,
-    #     inputs=[queryLabel, topKLabel, techniqueLabel],
-    #     outputs=[
-    #         gr.Textbox(label="greeting", lines=3),
-    #         gr.Dataframe(label="Resultados:", headers=df_headers),
-    #     ],
-    # )
-
-    # demo.launch()
-
-# demo = gr.Interface(
-#     title="Proyecto 2",
-#     article="Execution time: ... seconds",
-#     fn=executeQuery,
-#     inputs=[queryLabel, topKLabel, techniqueLabel],
-#     outputs=[
-#         gr.Textbox(label="greeting", lines=3),
-#         gr.Dataframe(label="Resultados:", headers=df_headers),
-#     ],
-# )
 
 demo.launch()

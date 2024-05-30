@@ -4,12 +4,17 @@ from nltk.stem.snowball import SnowballStemmer
 import json
 import pandas as pd
 
+path = "../data/"
+stoplist_path = path + "stoplist.txt"
+tf_idf_path = path + "tf_idf.json"
+doc_norms_path = path + "doc_norms.json"
+
 nltk.download("punkt")
-with open("stoplist.txt", encoding="utf-8") as file:
+with open(stoplist_path, encoding="utf-8") as file:
     stoplist = [line.rstrip().lower() for line in file]
 
 
-class InvertIndex:
+class InverseIndex:
     def __init__(self, index_file):
         self.index_file = index_file["news"]
         self.index = {}
@@ -84,9 +89,9 @@ class InvertIndex:
         self.length = {doc: tfidf ** (1 / 2) for doc, tfidf in self.length.items()}
 
         # store in disk
-        with open("tf_idf.json", "w") as json_file:
+        with open(tf_idf_path, "w") as json_file:
             json.dump(temp_tf_idf, json_file, indent=4)
-        with open("doc_norms.json", "w") as json_file:
+        with open(doc_norms_path, "w") as json_file:
             json.dump(self.length, json_file, indent=4)
 
     def retrieval(self, query, k):
@@ -170,7 +175,7 @@ class InvertIndex:
 
 def test_func(query, k):
     dataton = pd.read_csv("df_total.csv")
-    index = InvertIndex(dataton)
+    index = InverseIndex(dataton)
     result = pd.DataFrame(index.retrieval(query, k))
     result.columns = ["ID", "Score"]
     return result
