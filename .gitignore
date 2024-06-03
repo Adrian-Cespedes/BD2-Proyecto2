@@ -2,6 +2,9 @@
 data/fma_metadata.zip
 data/fma_metadata/
 
+# generated indexes
+src/temp_indexes/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

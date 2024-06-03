@@ -1,9 +1,19 @@
 import gradio as gr
 import pandas as pd
+import os
+from dbmanager import DataStoreManager
 
 # import numpy as np
-import time
-from inverseIndexRAM import test_func
+
+
+current_dir = os.path.abspath(os.path.dirname(__file__))
+base_path = os.path.join(current_dir, os.pardir, "data")
+
+# data_path = os.path.join(base_path, "df_total.csv")
+data_path = os.path.join(base_path, "spotify_millsongdata.csv")
+# manager class
+df_headers = ["Artist", "Song", "Lyrics", "Score"]
+manager = DataStoreManager(data_path, df_headers)
 
 
 def dummy_df():
@@ -18,24 +28,25 @@ def dummy_df():
     return dummydf
 
 
-def executeQuery(query, k, technique):
-    st = time.time()
+def executeQuery(query, k):
     # text = f"Query: {query}\nK: {k}\nTechnique: {technique}"
 
     # df = dummy_df()
-    df = test_func(query, k)
-    et = time.time()
+    # df = test_func(query, k)
+    result, time_taken = manager.retrieve(query, k)
 
-    return df, f"### Execution time: {et - st} seconds"
+    return result, f"### Execution time: {time_taken} seconds"
 
 
 with gr.Blocks(title="Proyecto 2") as demo:
     # df_headers = ["Score", "ID", "Title", "Description"]
-    df_headers = ["ID", "Score"]
+    # df_headers = ["ID", "Score"]
 
-    gr.Markdown("""
+    gr.Markdown(
+        """
     # Proyecto 2
-    """)
+    """
+    )
 
     with gr.Row():
         with gr.Column(scale=2):
@@ -47,8 +58,13 @@ with gr.Blocks(title="Proyecto 2") as demo:
             )
             techniqueLabel = gr.Dropdown(
                 label="Técnica:",
-                choices=["Propia", "PostgreSQL", "MongoDB"],
-                value="Propia",
+                # choices=["Propia", "PostgreSQL", "MongoDB"],
+                choices=[
+                    ("Propia", "inverted_index"),
+                    # ("Propia RAM", "inverted_index_ram"),
+                    ("MongoDB", "mongo"),
+                ],
+                value="inverted_index",
                 scale=0,
             )
 
@@ -63,9 +79,13 @@ with gr.Blocks(title="Proyecto 2") as demo:
 
     timeLabel = gr.Markdown("### Execution time: ... seconds")
 
+    techniqueLabel.input(
+        fn=manager.set_active_store, inputs=[techniqueLabel], outputs=[]
+    )
+
     btn.click(
         fn=executeQuery,
-        inputs=[queryLabel, topKLabel, techniqueLabel],
+        inputs=[queryLabel, topKLabel],
         outputs=[dfResult, timeLabel],
     )
 
