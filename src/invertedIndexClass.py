@@ -43,7 +43,7 @@ class InvertedIndex:
     def write_partial_index(self, partial_index, block_num):
         index_file = os.path.join(temp_index_dir, f"index_{block_num}.json")
         with open(index_file, "w", encoding="utf-8") as file:
-            json.dump(partial_index, file)
+            json.dump(partial_index, file, indent=4)
 
     def preprocess(self, text):
         tokens = nltk.word_tokenize(text.lower())
@@ -82,11 +82,11 @@ class InvertedIndex:
         # Guardar tf_idf y las longitudes de documentos en disco
         tf_idf_file = os.path.join(temp_index_dir, "tf_idf.json")
         with open(tf_idf_file, "w", encoding="utf-8") as file:
-            json.dump(tf_idf, file)
+            json.dump(tf_idf, file, indent=4)
 
         doc_lengths_file = os.path.join(temp_index_dir, "doc_lengths.json")
         with open(doc_lengths_file, "w", encoding="utf-8") as file:
-            json.dump(doc_lengths, file)
+            json.dump(doc_lengths, file, indent=4)
 
     def log_frec_idf(self, N, df):
         if df > 0:
