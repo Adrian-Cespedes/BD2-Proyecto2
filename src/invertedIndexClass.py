@@ -24,7 +24,8 @@ class InvertedIndex:
         self.index_file = index_file["text"]
         self.block_size = 1000  # Número de documentos por bloque
         self.doc_count = len(self.index_file)
-        self.stemmer = SnowballStemmer("spanish")
+        # self.stemmer = SnowballStemmer("spanish")
+        self.stemmer = SnowballStemmer("english")
         self.building()
 
     def build_index(self):
