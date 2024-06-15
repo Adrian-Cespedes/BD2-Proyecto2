@@ -136,6 +136,6 @@ class InvertedIndex:
 if __name__ == "__main__":
     dataton = pd.read_csv("data/spotify_millsongdata_1000.csv")
     index = InvertedIndex(dataton)
-    query1 = "without her"
+    query1 = "She's just my kind of girl"
     result = index.retrieve(query1, 5)
     print(result)
