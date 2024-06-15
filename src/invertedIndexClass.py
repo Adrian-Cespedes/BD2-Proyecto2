@@ -133,9 +133,9 @@ class InvertedIndex:
 
 
 # Ejemplo de uso
-# dataton = pd.read_csv("df_total.csv")
-# index = InvertedIndex(dataton)
-#
-# query1 = "ejemplo de consulta"
-# result = index.retrieve(query1, 10)
-# print(result)
+if __name__ == "__main__":
+    dataton = pd.read_csv("data/spotify_millsongdata_1000.csv")
+    index = InvertedIndex(dataton)
+    query1 = "without her"
+    result = index.retrieve(query1, 5)
+    print(result)

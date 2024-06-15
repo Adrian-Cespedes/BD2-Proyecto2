@@ -15,7 +15,7 @@ class DataStoreManager:
         self.stores = {
             "inverted_index": InvertedIndex(self.data),
             # "inverted_index_ram": InvertedIndexRAM(self.data),
-            "mongo": Mongo(),
+            "mongo": Mongo(self.data),
         }
         self.active_store = "inverted_index"
 
