@@ -63,16 +63,23 @@ class InvertedIndex:
 
         self.merge_blocks(temp_block_dir)
         # delete blocks carpeta entera
-        if os.path.exists(temp_block_dir):
-            shutil.rmtree(temp_block_dir)
+        # if os.path.exists(temp_block_dir):
+        #     shutil.rmtree(temp_block_dir)
 
     def merge_blocks(self, temp_block_dir):
-        # Merge blocks into a single index por partes:
+        temp_index_dir_pages = os.path.join(temp_index_dir, "invert_index")
+        if not os.path.exists(temp_index_dir_pages):
+            os.makedirs(temp_index_dir_pages)
 
+        # Merge blocks into a single index por partes:
         min_heap = []
         json_files = [os.path.join(temp_block_dir, f"block_{i}.json") for i in range(self.chuks_number)]
         file_terms = [self.load_next_term(filename, 1) for filename in json_files]
         file_pointers = [1 for i in range(self.chuks_number)]
+
+        print(len(json_files))
+        print(len(file_terms))
+        print(len(file_pointers))
 
         # Initialize heap with the first term from each block
         for i in range(self.chuks_number):
@@ -117,12 +124,15 @@ class InvertedIndex:
                 # Escribir el índice parcial en disco
                 # self.write_json_file(dict(final_terms), os.path.join(temp_index_dir, "index_build.json"))
                 index_page += 1
-                self.write_file(dict(final_terms), temp_index_dir, index_page)
+                file_name = os.path.join(temp_index_dir_pages, f"index_{index_page}.json")
+                self.write_file(dict(final_terms), file_name)
                 final_terms.clear()
 
         if final_terms:
+            index_page += 1
+            file_name = os.path.join(temp_index_dir_pages, f"index_{index_page}.json")
             final_terms = {term: dict(sorted(postings.items())) for term, postings in sorted(final_terms.items())}
-            self.write_json_file(dict(final_terms), os.path.join(temp_index_dir, f"index_{index_page}.json"))
+            self.write_file(dict(final_terms), file_name)
 
     def load_next_term(self, filename, num_term):
         with open(filename, "r") as file:
@@ -151,9 +161,8 @@ class InvertedIndex:
                 file.write(data_str[1:-1])  # Eliminar {}
                 file.write("}") 
 
-    def write_file(self, data, filename, i):
-        with open(
-            os.path.join(filename, f"index_{i}.json"), "w", encoding="utf-8") as file:
+    def write_file(self, data, filename):
+        with open(filename, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
 
     def preprocess(self, text):
@@ -167,37 +176,64 @@ class InvertedIndex:
         # self.compute_tf_idf_and_lengths()
 
     def compute_tf_idf_and_lengths(self):
+        temp_index_dir_pages = os.path.join(temp_index_dir, "invert_index")
+        if not os.path.exists(temp_index_dir_pages):
+            print("Error: invert_index not fount")
+
+        temp_docs_dir = os.path.join(temp_index_dir, "temp_docs")
+        if not os.path.exists(temp_docs_dir):
+            os.makedirs(temp_docs_dir)
+
         term_doc_count = defaultdict(int)
         tf_idf = defaultdict(lambda: defaultdict(float))
         doc_lengths = defaultdict(float)
 
-        for file in os.listdir(temp_index_dir):
-            if file.startswith("index_"):
-                with open(
-                    os.path.join(temp_index_dir, file), "r", encoding="utf-8"
-                ) as f:
-                    partial_index = json.load(f)
-                    for term, postings in partial_index.items():
-                        term_doc_count[term] += len(postings)
-                        for doc_id, tf in postings.items():
-                            tf_idf[term][doc_id] = (
-                                1 + np.log10(tf)
-                            ) * self.log_frec_idf(self.doc_count, term_doc_count[term])
+        for i in range(1,len(os.listdir(temp_index_dir_pages))+1):
+            # if file.startswith("index_"):
+            file = os.path.join(temp_index_dir_pages, f"index_{i}.json")
+            with open(os.path.join(temp_index_dir_pages, file), "r", encoding="utf-8") as f:
+                partial_index = json.load(f)
+                for term, postings in partial_index.items():
+                    term_doc_count[term] += len(postings)
+                    for doc_id, tf in postings.items():
+                        tf_idf[term][doc_id] = (1 + np.log10(tf)) * self.log_frec_idf(self.doc_count, term_doc_count[term])
+                        # doc_lengths[doc_id] += tf_idf[term][doc_id] ** 2
+                        if doc_id in doc_lengths:
                             doc_lengths[doc_id] += tf_idf[term][doc_id] ** 2
+                        else:
+                            doc_lengths[doc_id] = tf_idf[term][doc_id] ** 2
+
+            # write update page
+            self.write_file(dict(tf_idf), file)
+            tf_idf.clear()
+            term_doc_count.clear()
+
+            # write docs_id: partial_sum(tf-idf**2)
+            doc_lengths =  {int(doc_id): sum_tfidf for doc_id, sum_tfidf in doc_lengths.items()}
+            doc_lengths =  {doc_id: sum_tfidf for doc_id, sum_tfidf in sorted(doc_lengths.items())}
+            file_docs = os.path.join(temp_docs_dir, f"docpage_{i}.json")
+            self.write_file(dict(doc_lengths), file_docs)
+            doc_lengths.clear()
+
+        # Merge docs_id
+
+        self.merge_docs_lengths(temp_docs_dir)
+
+        # delete blocks carpeta entera
+        # if os.path.exists(temp_docs_dir):
+        #     shutil.rmtree(temp_docs_dir)
 
         # Convertir las longitudes de los documentos a sus raíces cuadradas
-        doc_lengths = {
-            doc_id: np.sqrt(length) for doc_id, length in doc_lengths.items()
-        }
+        # doc_lengths = {doc_id: np.sqrt(length) for doc_id, length in doc_lengths.items()}
 
         # Guardar tf_idf y las longitudes de documentos en disco
-        tf_idf_file = os.path.join(temp_index_dir, "tf_idf.json")
-        with open(tf_idf_file, "w", encoding="utf-8") as file:
-            json.dump(tf_idf, file, indent=4)
+        # tf_idf_file = os.path.join(temp_index_dir, "tf_idf.json")
+        # with open(tf_idf_file, "w", encoding="utf-8") as file:
+        #     json.dump(tf_idf, file, indent=4)
 
-        doc_lengths_file = os.path.join(temp_index_dir, "doc_lengths.json")
-        with open(doc_lengths_file, "w", encoding="utf-8") as file:
-            json.dump(doc_lengths, file, indent=4)
+        # doc_lengths_file = os.path.join(temp_index_dir, "doc_lengths.json")
+        # with open(doc_lengths_file, "w", encoding="utf-8") as file:
+        #     json.dump(doc_lengths, file, indent=4)
 
     def log_frec_idf(self, N, df):
         if df > 0:
@@ -242,6 +278,79 @@ class InvertedIndex:
         sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
         return sorted_scores[:k] if sorted_scores else None
 
+    def merge_docs_lengths(self, temp_docs_dir):
+        temp_docs_pages = os.path.join(temp_index_dir, "docs_norms")
+        if not os.path.exists(temp_docs_pages):
+            os.makedirs(temp_docs_pages)
+
+        # Merge blocks into a single index por partes:
+        min_heap = []
+        json_files = [os.path.join(temp_docs_dir, f"docpage_{i+1}.json") for i in range(len(os.listdir(temp_docs_dir)))]
+        file_terms = [self.convert_key_to_int(self.load_next_term(filename, 1)) for filename in json_files]
+        file_pointers = [1 for i in range(len(os.listdir(temp_docs_dir)))]
+
+        print(len(json_files))
+        print(len(file_terms))
+        print(len(file_pointers))
+
+        # Initialize heap with the first term from each block
+        for i in range(len(os.listdir(temp_docs_dir))):
+            term = file_terms[i]
+            heapq.heappush(min_heap, (list(term.keys())[0], i))
+
+        final_terms = defaultdict(float)
+        index_page = 0
+        while min_heap:
+            doc, i = heapq.heappop(min_heap)
+
+            # extraer los postings de file_terms[i] correctamente
+            postings = file_terms[i][doc]
+
+            if doc in final_terms: 
+                final_terms[doc] += postings
+            else:
+                final_terms[doc] = postings
+
+            # cargar nuevo término del bloque que se uso
+            file_pointers[i] += 1
+            new_term = self.load_next_term(json_files[i], file_pointers[i])
+            if new_term:
+                new_term = self.convert_key_to_int(new_term)
+                heapq.heappush(min_heap, (list(new_term.keys())[0], i))
+                file_terms[i] = new_term
+
+            # Escribir el índice final en disco
+            if len(final_terms) >= self.block_size:
+                while min_heap:
+                    temp_t, temp_i = heapq.heappop(min_heap)
+                    if temp_t != term:
+                        heapq.heappush(min_heap, (temp_t, temp_i))
+                        break
+
+                    # Escribir el índice parcial en disco
+                    final_terms[doc] += file_terms[temp_i][temp_t]
+
+                # ordenar los postings por doc_id
+                final_terms = {doc: tf_idf for doc, tf_idf in sorted(final_terms.items())}
+                final_terms = {doc_id: np.sqrt(length) for doc_id, length in final_terms.items()}
+
+                # Escribir el índice parcial en disco
+                # self.write_json_file(dict(final_terms), os.path.join(temp_index_dir, "index_build.json"))
+                index_page += 1
+                file_name = os.path.join(temp_docs_pages, f"docs_nomrs_{index_page}.json")
+                self.write_file(dict(final_terms), file_name)
+                final_terms.clear()
+
+        if final_terms:
+            index_page += 1
+            file_name = os.path.join(temp_docs_pages, f"docs_nomrs_{index_page}.json")
+            # ordenar los postings por doc_id
+            final_terms = {doc: tf_idf for doc, tf_idf in sorted(final_terms.items())}
+            final_terms = {doc_id: np.sqrt(length) for doc_id, length in final_terms.items()}
+            self.write_file(dict(final_terms), file_name)
+
+    def convert_key_to_int(self, term_dict):
+        return {int(key): value for key, value in term_dict.items()}
 
 # Ejemplo de uso
 if __name__ == "__main__":
