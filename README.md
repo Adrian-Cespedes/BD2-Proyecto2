@@ -10,8 +10,27 @@ source ./start.sh
 # Informe del Proyecto
 
 ## 1. Introducción
-- Objetivo del proyecto
-- Descripción del dominio de datos y la importancia de aplicar indexación
+Desarrollar y optimizar algoritmos de búsqueda y recuperación de información basados en contenido, implementando un Índice Invertido para documentos de texto y una estructura multidimensional para imágenes y audio, con el fin de mejorar la eficiencia y precisión en un sistema de recomendación, además de describir el dominio de datos y la relevancia de la indexación en estos contextos.
+#### Descripción del Dominio de Datos:
+------------------------------------------
+#### Importancia de Aplicar Indexación:
+   La indexación es crucial para mejorar la eficiencia, precisión y escalabilidad en la búsqueda y recuperación de información en grandes conjuntos de datos textuales y     
+  multimedia, optimizando los sistemas de recomendación, además posee las siguientes caracteristicas:
+
+1. **Rapidez en la Recuperación:**
+   - **Índice Invertido:** Acceso rápido a documentos con términos específicos.
+   - **Estructuras Multidimensionales:** Búsqueda eficiente de imágenes y audios similares.
+
+2. **Reducción de la Complejidad:**
+   - **Eficiencia en Consultas:** Consultas en tiempo sublineal, optimizando el uso de memoria y CPU.
+
+3. **Mejora en la Precisión:**
+   - **Relevancia de Resultados:** Uso de técnicas de ponderación y ranking como TF-IDF.
+   - **Búsqueda Contextual:** Integración de metadatos y características contextuales.
+
+4. **Escalabilidad:**
+   - **Manejo de Volumen de Datos:** Sistemas de indexación escalables horizontalmente.
+   - **Actualización y Mantenimiento:** Actualizaciones incrementales sin reconstrucción total.
 
 ## 2. Backend: Índice Invertido
 - Construcción del índice invertido en memoria secundaria
