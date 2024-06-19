@@ -25,11 +25,10 @@ class InvertedIndex:
     def __init__(self, file):
         self.path_docs = file
         self.block_size = 100  # Número de documentos por bloque
-        self.doc_count = 1000  # numero de documentos
+        self.doc_count = 0  # numero de documentos
         # self.stemmer = SnowballStemmer("spanish")
         self.stemmer = SnowballStemmer("english")
-        if (False):
-            self.building()
+        self.building()
         self.chuks_number = 0
 
     def build_index(self):
@@ -190,6 +189,7 @@ class InvertedIndex:
         tokens = nltk.word_tokenize(text.lower())
         tokens = [w for w in tokens if w not in stoplist and w.isalnum()]
         result = Counter([self.stemmer.stem(w) for w in tokens])
+        # result = Counter([w for w in tokens])
         return result  # {word: frequency}
 
     def building(self):
@@ -217,7 +217,7 @@ class InvertedIndex:
             ) as f:
                 partial_index = json.load(f)
                 for term, postings in partial_index.items():
-                    term_doc_count[term] += len(postings)
+                    term_doc_count[term] = len(postings)
                     for doc_id, tf in postings.items():
                         tf_idf[term][doc_id] = (1 + np.log10(tf)) * self.log_frec_idf(
                             self.doc_count, term_doc_count[term]
@@ -253,24 +253,10 @@ class InvertedIndex:
             shutil.rmtree(temp_docs_dir)
 
     def log_frec_idf(self, N, df):
-        if df > 0:
-            return np.log10(N / df)
-        return 0
+        return np.log10(N / df)
 
     def retrieve(self, query, k):
-        query_vector = self.preprocess(query) # {term: tf}
-        # query_tf_idf = {term: (1 + np.log10(tf)) for term, tf in query_vector.items()}
-        # query_norm = np.sqrt(sum(val**2 for val in query_tf_idf.values()))
-
-        # with open(
-        #     os.path.join(temp_index_dir, "tf_idf.json"), "r", encoding="utf-8"
-        # ) as file:
-        #     tf_idf = json.load(file)
-
-        # with open(
-        #     os.path.join(temp_index_dir, "doc_lengths.json"), "r", encoding="utf-8"
-        # ) as file:
-        #     doc_lengths = json.load(file)
+        query_vector = self.preprocess(query)  # {term: tf}
 
         term_doc_count = defaultdict(int)
         query_tf_idf = defaultdict(float)
@@ -283,25 +269,23 @@ class InvertedIndex:
         for i in range(1, len(os.listdir(temp_index_dir_pages)) + 1):
             # if file.startswith("index_"):
             file = os.path.join(temp_index_dir_pages, f"index_{i}.json")
-            with open( os.path.join(temp_index_dir_pages, file), "r", encoding="utf-8" ) as f:
+            with open(
+                os.path.join(temp_index_dir_pages, file), "r", encoding="utf-8"
+            ) as f:
                 tf_idf = json.load(f)
                 # term_doc_count = {term: len(tf_idf[term]) for term in tf_idf}
                 for term in query_vector.keys():
                     if term in tf_idf:
                         term_doc_count[term] = len(tf_idf[term])
-                        query_tf_idf[term] = 1 + np.log10(query_vector[term])*self.log_frec_idf(self.doc_count, term_doc_count[term])
-                    
+                        query_tf_idf[term] = (
+                            1 + np.log10(query_vector[term])
+                        ) * self.log_frec_idf(self.doc_count, term_doc_count[term])
+
                         for doc_id, tf_idf_val in tf_idf[term].items():
                             if doc_id in scores:
                                 scores[doc_id] += query_tf_idf[term] * tf_idf_val
                             else:
                                 scores[doc_id] = query_tf_idf[term] * tf_idf_val
-
-        # query_tf_idf = {
-        #     term: (1 + np.log10(tf))
-        #     * self.log_frec_idf(self.doc_count, term_doc_count.get(term, 0))
-        #     for term, tf in query_vector.items()
-        # }
 
         query_norm = np.sqrt(sum(val**2 for val in query_tf_idf.values()))
         temp_docs_pages = os.path.join(temp_index_dir, "docs_norms")
@@ -311,7 +295,7 @@ class InvertedIndex:
         for i in range(1, len(os.listdir(temp_docs_pages)) + 1):
             # if file.startswith("index_"):
             file = os.path.join(temp_docs_pages, f"docs_norms_{i}.json")
-            with open( os.path.join(temp_docs_pages, file), "r", encoding="utf-8" ) as f:
+            with open(os.path.join(temp_docs_pages, file), "r", encoding="utf-8") as f:
                 doc_lengths = json.load(f)
                 for doc_id in scores:
                     if doc_id in doc_lengths:
@@ -416,7 +400,8 @@ class InvertedIndex:
 if __name__ == "__main__":
     dataton = os.path.join(base_path, "spotify_millsongdata_1000.csv")
     index = InvertedIndex(dataton)
-    query1 = """Take it easy with me, please  
+    query1 = """
+"Take it easy with me, please  
 Touch me gently like a summer evening breeze  
 Take your time, make it slow  
 Andante, Andante  
@@ -439,11 +424,14 @@ Make me sing, make me sound
 Andante, Andante  
 Tread lightly on my ground  
 Andante, Andante  
-Oh please don't let me down There's a shimmer in your eyes  
+Oh please don't let me down  
+  
+There's a shimmer in your eyes  
 Like the feeling of a thousand butterflies  
 Please don't talk, go on, play  
 Andante, Andante  
 And let me float away  
+  
 I'm your music  
 (I am your music and I am your song)  
 I'm your song  
@@ -465,6 +453,7 @@ Andante, Andante
 Oh please don't let me down  
 Andante, Andante  
 Oh please don't let me down
+
 """
     result = index.retrieve(query1, 5)
     print(result)
