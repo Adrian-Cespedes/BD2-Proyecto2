@@ -63,8 +63,8 @@ class InvertedIndex:
 
         self.merge_blocks(temp_block_dir)
         # delete blocks carpeta entera
-        # if os.path.exists(temp_block_dir):
-        #     shutil.rmtree(temp_block_dir)
+        if os.path.exists(temp_block_dir):
+            shutil.rmtree(temp_block_dir)
 
     def merge_blocks(self, temp_block_dir):
         temp_index_dir_pages = os.path.join(temp_index_dir, "invert_index")
@@ -77,14 +77,10 @@ class InvertedIndex:
         file_terms = [self.load_next_term(filename, 1) for filename in json_files]
         file_pointers = [1 for i in range(self.chuks_number)]
 
-        print(len(json_files))
-        print(len(file_terms))
-        print(len(file_pointers))
-
         # Initialize heap with the first term from each block
         for i in range(self.chuks_number):
-            term = file_terms[i]
-            heapq.heappush(min_heap, (list(term.keys())[0], i))
+            term = list(file_terms[i].keys())[0]
+            heapq.heappush(min_heap, (term, i))
 
         final_terms = defaultdict(lambda: defaultdict(int))
 
@@ -92,7 +88,7 @@ class InvertedIndex:
         while min_heap:
             term, i = heapq.heappop(min_heap)
 
-            # extraer los postings de file_terms[i] correctamente
+            # Extract postings correctly
             postings = file_terms[i][term]
 
             if term in final_terms: 
@@ -100,14 +96,15 @@ class InvertedIndex:
             else:
                 final_terms[term] = postings
 
-            # cargar nuevo término del bloque que se uso
+            # Load next term from the block used
             file_pointers[i] += 1
             new_term = self.load_next_term(json_files[i], file_pointers[i])
-            if new_term:
-                heapq.heappush(min_heap, (list(new_term.keys())[0], i))
+            if new_term != None:
+                new_term_key = list(new_term.keys())[0]
+                heapq.heappush(min_heap, (new_term_key, i))
                 file_terms[i] = new_term
 
-            # Escribir el índice final en disco
+            # Write the final index to disk
             if len(final_terms) >= self.block_size:
                 while min_heap:
                     temp_t, temp_i = heapq.heappop(min_heap)
@@ -115,11 +112,17 @@ class InvertedIndex:
                         heapq.heappush(min_heap, (temp_t, temp_i))
                         break
 
-                    # Escribir el índice parcial en disco
+                    # Write the partial index to disk
                     final_terms[term].update(file_terms[temp_i][temp_t])
+                    file_pointers[temp_i]+=1
+                    new_term = self.load_next_term(json_files[temp_i], file_pointers[temp_i])
+                    if new_term != None:
+                        new_term_key = list(new_term.keys())[0]
+                        heapq.heappush(min_heap, (new_term_key, temp_i))
+                        file_terms[temp_i] = new_term
 
-                # ordenar los postings por doc_id
-                final_terms = {term: dict(sorted(postings.items())) for term, postings in sorted(final_terms.items())}
+                # Sort postings by doc_id
+                final_terms = {term: postings for term, postings in sorted(final_terms.items())}
 
                 # Escribir el índice parcial en disco
                 # self.write_json_file(dict(final_terms), os.path.join(temp_index_dir, "index_build.json"))
@@ -173,7 +176,7 @@ class InvertedIndex:
 
     def building(self):
         self.build_index()
-        # self.compute_tf_idf_and_lengths()
+        self.compute_tf_idf_and_lengths()
 
     def compute_tf_idf_and_lengths(self):
         temp_index_dir_pages = os.path.join(temp_index_dir, "invert_index")
@@ -220,20 +223,8 @@ class InvertedIndex:
         self.merge_docs_lengths(temp_docs_dir)
 
         # delete blocks carpeta entera
-        # if os.path.exists(temp_docs_dir):
-        #     shutil.rmtree(temp_docs_dir)
-
-        # Convertir las longitudes de los documentos a sus raíces cuadradas
-        # doc_lengths = {doc_id: np.sqrt(length) for doc_id, length in doc_lengths.items()}
-
-        # Guardar tf_idf y las longitudes de documentos en disco
-        # tf_idf_file = os.path.join(temp_index_dir, "tf_idf.json")
-        # with open(tf_idf_file, "w", encoding="utf-8") as file:
-        #     json.dump(tf_idf, file, indent=4)
-
-        # doc_lengths_file = os.path.join(temp_index_dir, "doc_lengths.json")
-        # with open(doc_lengths_file, "w", encoding="utf-8") as file:
-        #     json.dump(doc_lengths, file, indent=4)
+        if os.path.exists(temp_docs_dir):
+            shutil.rmtree(temp_docs_dir)
 
     def log_frec_idf(self, N, df):
         if df > 0:
@@ -289,10 +280,6 @@ class InvertedIndex:
         file_terms = [self.convert_key_to_int(self.load_next_term(filename, 1)) for filename in json_files]
         file_pointers = [1 for i in range(len(os.listdir(temp_docs_dir)))]
 
-        print(len(json_files))
-        print(len(file_terms))
-        print(len(file_pointers))
-
         # Initialize heap with the first term from each block
         for i in range(len(os.listdir(temp_docs_dir))):
             term = file_terms[i]
@@ -303,23 +290,22 @@ class InvertedIndex:
         while min_heap:
             doc, i = heapq.heappop(min_heap)
 
-            # extraer los postings de file_terms[i] correctamente
-            postings = file_terms[i][doc]
+            # extraer correctamente
+            tf_idf = file_terms[i][doc]
 
             if doc in final_terms: 
-                final_terms[doc] += postings
+                final_terms[doc] += tf_idf
             else:
-                final_terms[doc] = postings
+                final_terms[doc] = tf_idf
 
-            # cargar nuevo término del bloque que se uso
             file_pointers[i] += 1
             new_term = self.load_next_term(json_files[i], file_pointers[i])
-            if new_term:
+            if new_term != None:
                 new_term = self.convert_key_to_int(new_term)
                 heapq.heappush(min_heap, (list(new_term.keys())[0], i))
                 file_terms[i] = new_term
 
-            # Escribir el índice final en disco
+            # Escribir en disco
             if len(final_terms) >= self.block_size:
                 while min_heap:
                     temp_t, temp_i = heapq.heappop(min_heap)
@@ -327,8 +313,14 @@ class InvertedIndex:
                         heapq.heappush(min_heap, (temp_t, temp_i))
                         break
 
-                    # Escribir el índice parcial en disco
+                    # Actualizar tf_idf
                     final_terms[doc] += file_terms[temp_i][temp_t]
+                    file_pointers[temp_i] += 1
+                    new_term = self.load_next_term(json_files[temp_i], file_pointers[temp_i])
+                    if new_term != None:
+                        new_term = self.convert_key_to_int(new_term)
+                        heapq.heappush(min_heap, (list(new_term.keys())[0], temp_i))
+                        file_terms[temp_i] = new_term
 
                 # ordenar los postings por doc_id
                 final_terms = {doc: tf_idf for doc, tf_idf in sorted(final_terms.items())}
