@@ -83,10 +83,37 @@ def build_index(self):
 
 3. **Merge de Bloques:** Se realiza el merge de los bloques en memoria secundaria, se ordenan y se escriben en disco.
 
-
-
-
 ### 2.2 Ejecución óptima de consultas aplicando Similitud de Coseno
+Para la ejecución optima de consultas utilizando similitud de coseno se utilizo la siguiente logica:
+
+1. Obtener el vector de consulta y normalizarlo.
+2. Buscar los documentos que contienen los terminos de la consulta. (Cargar los bloques que contienen los terminos de la consulta)
+3. Calcular el score de similitud de coseno entre la consulta y los documentos.
+
+La funcion retrieve contiene la siguiente parte de codigo:
+```python
+...
+query_tf_idf = {
+     term: (1 + np.log10(tf))
+     * self.log_frec_idf(self.doc_count, term_doc_count.get(term, 0))
+     for term, tf in query_vector.items()
+}
+query_norm = np.sqrt(sum(val**2 for val in query_tf_idf.values()))
+scores = defaultdict(float)
+for term in query_tf_idf:
+    if term in tf_idf:
+        for doc_id, tf_idf_val in tf_idf[term].items():
+            scores[doc_id] += query_tf_idf[term] * tf_idf_val
+for doc_id in scores:
+    if doc_id in doc_lengths:
+        scores[doc_id] /= query_norm * doc_lengths[doc_id]
+sorted_scores = sorted(scores.items(), key=lambda item: item[1], reverse=True)
+return sorted_scores[:k] if sorted_scores else None
+...
+```
+Esto permite leer los  bloques que contienen
+
+
 ### 2.3 Explicación de la construcción del índice invertido en MongoDB
 
 La creación del indice invertido en MongoDB es relativamente simple, se requiere de una base de datos y una colección. En este caso se utilizo python para toda la configuración y creación:
