@@ -183,6 +183,24 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 
 ![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/201c504b-2e86-4a6d-a477-54a3e9703c9f)
 
+La gráfica compara los tiempos de búsqueda entre dos métodos diferentes: MongoDB y el Índice Invertido, en función del número de documentos. Aquí se presenta un análisis conciso de los resultados:
+
+Desempeño de MongoDB (línea azul):
+
+Consistencia: Los tiempos de búsqueda se mantienen bajos y estables a medida que aumenta el número de documentos.
+Eficiencia: MongoDB maneja eficientemente búsquedas en conjuntos de datos grandes, con tiempos de respuesta mínimos incluso con 16000 documentos.
+Desempeño del Índice Invertido (línea naranja):
+
+Incremento Progresivo: Los tiempos de búsqueda aumentan considerablemente a medida que crece el número de documentos.
+Escalabilidad Limitada: El incremento lineal en el tiempo de búsqueda sugiere que el Índice Invertido es menos eficiente para conjuntos de datos grandes en comparación con MongoDB.
+
+Comparación General:
+
+Superioridad de MongoDB: En todos los puntos de datos, MongoDB muestra tiempos de búsqueda significativamente más rápidos.
+Necesidad de Optimización: El Índice Invertido podría requerir optimizaciones adicionales para mejorar su desempeño en grandes volúmenes de datos.
+
+Conclusión sobre los resultados obtenidos
+MongoDB demuestra ser más eficiente y escalable para búsquedas en grandes conjuntos de documentos en comparación con el Índice Invertido, que muestra un aumento considerable en el tiempo de búsqueda a medida que crece el número de documentos.
 
 
 
