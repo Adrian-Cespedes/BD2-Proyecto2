@@ -181,7 +181,8 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 | 16000              |        0.0332     |     0.4128           |
 
 
-![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/18446caf-011d-44ce-ba0b-1d10e080490f)
+![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/201c504b-2e86-4a6d-a477-54a3e9703c9f)
+
 
 
 
