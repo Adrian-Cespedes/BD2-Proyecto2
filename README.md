@@ -81,7 +81,8 @@ def build_index(self):
            shutil.rmtree(temp_block_dir)
 ```
 
-3. **Merge de Bloques:** Se realiza el merge de los bloques en memoria secundaria, se ordenan y se escriben en disco.
+3. **Merge de Bloques:** Se realiza el merge pero como los indices ya se guardan ordenados por terminos, la construccion de manera ordenada por terminos y docID se realiza de manera eficiente.
+
 
 ### 2.2 Ejecución óptima de consultas aplicando Similitud de Coseno
 Para la ejecución optima de consultas utilizando similitud de coseno se utilizo la siguiente logica:
@@ -145,18 +146,13 @@ def retrieve(self, query, k):
 
 Esta funcion permite recibir una query, la cual es una caden de texto sin procesar, y un valor k. El cual busca retornar los k documentos mas relevantes respecto a la query. Para esto la funcion de `find` recibe como parametro la query y el score de relevancia, para luego ordenarlos y limitarlos a k.
 
-## 3. Backend: Índice Multidimensional
-- Descripción de la técnica de indexación de las librerías utilizadas
-- KNN Search y Range Search (si es que lo soporta)
-- Análisis de la maldición de la dimensionalidad y estrategias para mitigarlo
-
-## 4. Frontend
+## 3. Frontend
 - Diseño de la GUI
 - Mini-manual de usuario
 - Capturas de pantalla de la GUI
 - Análisis comparativo visual con otras implementaciones
 
-## 5. Experimentación
+## 4. Experimentación
 - Tablas y gráficos de los resultados experimentales
 - Análisis y discusión
 - Imágenes o diagramas para una mejor comprensión
