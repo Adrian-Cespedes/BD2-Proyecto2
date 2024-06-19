@@ -39,7 +39,7 @@ En el indice invertido se opto por usar SPIMI, con la optimizaciones de :
 -  **Terminos directos** : Se evita utilizar un diccionario para almacenar los terminos, en su lugar se utilizan los docID directamente en el bloque. Esto con el fin de reducir el uso de memoria y la cantidad de accesos a disco.
 
 La construcción del indice invertido con estas optimizaciones se realiza en 3 pasos:
-1. **Tokenización y Normalización:** Se tokeniza y normaliza el texto de los documentos, eliminando signos de puntuación, caracteres especiales y stopwords.
+1. **Preprocesamiento:** Se tokeniza y normaliza el texto de los documentos, eliminando signos de puntuación, caracteres especiales y stopwords.
 
 ```python
 def preprocess(self, text):
@@ -49,12 +49,11 @@ def preprocess(self, text):
     return result # {word: frequency}
 ```
 
-2. **Se construye el indice invertido:** Se recorre cada documento y se construye el indice invertido, se utiliza un buffer de bloques para la escritura de los bloques en memoria secundaria.
+2. **Se construye el indice invertido:** Despues de la preprocesacion se construye el indice, el cual siguiendo la técnica de SPIMI se divide en bloques y se escriben en memoria secundaria. En este caso, se crea un diccionario 
 ```python
 def build_index(self):
        # SPIMI
        chunk_iter = pd.read_csv(self.path_docs, chunksize=self.block_size)
-       # tem dir para almacenar los bloques
        temp_block_dir = os.path.join(temp_index_dir, "blocks")
        if not os.path.exists(temp_block_dir):
            os.makedirs(temp_block_dir)
@@ -80,7 +79,7 @@ def build_index(self):
        # delete blocks carpeta entera
        if os.path.exists(temp_block_dir):
            shutil.rmtree(temp_block_dir)
-
+```
 
 3. **Merge de Bloques:** Se realiza el merge de los bloques en memoria secundaria, se ordenan y se escriben en disco.
 
