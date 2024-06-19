@@ -1,6 +1,12 @@
 # BD2-Proyecto2
 Proyecto 2 para el curso de Base de Datos 2
 
+**Integrantes**
+- Chincha León, Marcelo Andres
+- David Manfredo Herencia Galván
+- Adrian Joshep Céspedes Zevallos
+- Gabriel Eduardo Blanco Gutierrez
+
 ## Run with conda
 ```bash
 chmod +x ./start.sh
@@ -29,8 +35,7 @@ Desarrollar y optimizar algoritmos de búsqueda y recuperación de información 
    - **Búsqueda Contextual:** Integración de metadatos y características contextuales.
 
 4. **Escalabilidad:**
-   - **Manejo de Volumen de Datos:** Sistemas de indexación escalables horizontalmente.
-   - **Actualización y Mantenimiento:** Actualizaciones incrementales sin reconstrucción total.
+   - **Manejo de Volumen de Datos:** Sistema de indexación escalables en memoria secundaria.
 
 ## 2. Backend: Índice Invertido
 ### 2.1 Construcción del índice invertido en memoria secundaria
@@ -147,13 +152,36 @@ def retrieve(self, query, k):
 Esta funcion permite recibir una query, la cual es una caden de texto sin procesar, y un valor k. El cual busca retornar los k documentos mas relevantes respecto a la query. Para esto la funcion de `find` recibe como parametro la query y el score de relevancia, para luego ordenarlos y limitarlos a k.
 
 ## 3. Frontend
-- Diseño de la GUI
-- Mini-manual de usuario
-- Capturas de pantalla de la GUI
-- Análisis comparativo visual con otras implementaciones
+![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/bd6f6a63-1698-4bbb-ad50-cdc8142acfa8)
+
+Para la implementación de la interfaz de usuario, se utilizó Gradio, una herramienta para crear interfaces web interactivas de manera rápida y sencilla. A continuación, se muestran las características principales de la interfaz desarrollada para el proyecto:
+
+1. Interfaz Interactiva para Búsqueda de Consultas:
+
+* Ingreso de Consultas: La interfaz permite al usuario ingresar la consulta que desea buscar. 
+* Selección de Técnica de Recuperación: Es posible elegir entre dos técnicas de recuperación de información:
+MongoDB: Utilizando la indexación de texto proporcionada por MongoDB.
+Implementación Propia: Utilizando el índice invertido desarrollado en este proyecto.
+* Selección del Número de Documentos (k): Permite seleccionar de manera sencilla el número de documentos que se desea recuperar, es decir, el valor de k para obtener "el top k".
+  
+2. Resultados de la Consulta:
+
+* Visualización de Resultados: Una vez procesada la consulta, la interfaz muestra los resultados recuperados, proporcionando una lista de los documentos más relevantes.
+* Tiempo de Procesamiento: En la parte inferior de la interfaz, se muestra el tiempo que tomó realizar la consulta, ofreciendo una referencia sobre la eficiencia del sistema.
 
 ## 4. Experimentación
 - Tablas y gráficos de los resultados experimentales
-- Análisis y discusión
-- Imágenes o diagramas para una mejor comprensión
+
+|       Palabras     |      Mongo(sec)   | Inverted Index (sec) |
+|--------------------|-------------------|----------------------|
+| 1000               |        0.0056     |     0.0427           |
+| 2000               |        0.0058     |     0.0787           |
+| 4000               |        0.0106     |     0.0915           |
+| 8000               |        0.0256     |     0.2028           |
+| 16000              |        0.0332     |     0.4128           |
+
+
+![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/18446caf-011d-44ce-ba0b-1d10e080490f)
+
+
 
