@@ -24,7 +24,7 @@ if not os.path.exists(temp_index_dir):
 class InvertedIndex:
     def __init__(self, file):
         self.path_docs = file
-        self.block_size = 100  # Número de documentos por bloque
+        self.block_size = 5000  # Número de documentos por bloque
         self.doc_count = 0  # numero de documentos
         # self.stemmer = SnowballStemmer("spanish")
         self.stemmer = SnowballStemmer("english")

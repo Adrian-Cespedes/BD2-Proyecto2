@@ -1,6 +1,6 @@
 import pandas as pd
 
-from invertedIndexClass import InvertedIndex
+from invertedIndexClass_new_version import InvertedIndex
 from invertedIndexRAM import InvertedIndexRAM
 
 from mongoClass import Mongo
@@ -10,7 +10,7 @@ import time
 class DataStoreManager:
     def __init__(self, data_filename, df_headers=[]):
         # ['artist', 'song', 'link', 'text']
-        self.data = pd.read_csv(data_filename)
+        self.data = data_filename  # path
         self.df_headers = df_headers
         self.stores = {
             "inverted_index": InvertedIndex(self.data),
@@ -36,17 +36,19 @@ class DataStoreManager:
         if result is None:
             result = pd.DataFrame(columns=self.df_headers)
         else:
-            # result = pd.DataFrame(result)
-            result = pd.DataFrame(
-                [
-                    {
-                        "artist": self.data.iloc[int(doc_id)]["artist"],
-                        "song": self.data.iloc[int(doc_id)]["song"],
-                        "lyrics": self.data.iloc[int(doc_id)]["text"],
-                        "score": score,
-                    }
-                    for doc_id, score in result
-                ]
-            )
+            df = []
+            for doc_id, score in result:
+                row = pd.read_csv(
+                    self.data, skiprows=int(doc_id) + 1, nrows=1, header=None
+                ).iloc[0]
+                result_dict = {
+                    "artist": row.iloc[0],
+                    "song": row.iloc[1],
+                    "lyrics": row.iloc[3],
+                    "score": score,
+                }
+                df.append(result_dict)
+            result = pd.DataFrame(df)
+
             result.columns = self.df_headers
         return result, end_time - start_time

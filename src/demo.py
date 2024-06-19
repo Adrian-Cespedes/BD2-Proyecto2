@@ -10,7 +10,7 @@ current_dir = os.path.abspath(os.path.dirname(__file__))
 base_path = os.path.join(current_dir, os.pardir, "data")
 
 # data_path = os.path.join(base_path, "df_total.csv")
-data_path = os.path.join(base_path, "spotify_millsongdata.csv")
+data_path = os.path.join(base_path, "spotify_millsongdata_16000.csv")
 # manager class
 df_headers = ["Artist", "Song", "Lyrics", "Score"]
 manager = DataStoreManager(data_path, df_headers)
