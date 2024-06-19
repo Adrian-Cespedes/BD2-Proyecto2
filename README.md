@@ -34,6 +34,59 @@ Desarrollar y optimizar algoritmos de búsqueda y recuperación de información 
 
 ## 2. Backend: Índice Invertido
 ### 2.1 Construcción del índice invertido en memoria secundaria
+En el indice invertido se opto por usar SPIMI, con la optimizaciones de :
+-  **Buffer de bloques** : Se utilizo un buffer de bloques para la escritura de los bloques en memoria secundaria, esto con el fin de reducir la cantidad de escrituras y accesos en disco.
+-  **Terminos directos** : Se evita utilizar un diccionario para almacenar los terminos, en su lugar se utilizan los docID directamente en el bloque. Esto con el fin de reducir el uso de memoria y la cantidad de accesos a disco.
+
+La construcción del indice invertido con estas optimizaciones se realiza en 3 pasos:
+1. **Tokenización y Normalización:** Se tokeniza y normaliza el texto de los documentos, eliminando signos de puntuación, caracteres especiales y stopwords.
+
+```python
+def preprocess(self, text):
+    tokens = nltk.word_tokenize(text.lower())
+    tokens = [w for w in tokens if w not in stoplist and w.isalnum()]
+    result = Counter([self.stemmer.stem(w) for w in tokens])
+    return result # {word: frequency}
+```
+
+2. **Se construye el indice invertido:** Se recorre cada documento y se construye el indice invertido, se utiliza un buffer de bloques para la escritura de los bloques en memoria secundaria.
+```python
+def build_index(self):
+       # SPIMI
+       chunk_iter = pd.read_csv(self.path_docs, chunksize=self.block_size)
+       # tem dir para almacenar los bloques
+       temp_block_dir = os.path.join(temp_index_dir, "blocks")
+       if not os.path.exists(temp_block_dir):
+           os.makedirs(temp_block_dir)
+       for i, chunk in enumerate(chunk_iter):
+           partial_index = defaultdict(lambda: defaultdict(int))
+           len_chunk = len(chunk["text"])
+           for doc_id, document in enumerate(chunk["text"]):
+               processed = self.preprocess(document)
+               for term, tf in processed.items():
+                   # almacenar {term: {doc_id: tf}}
+                   if term not in partial_index:
+                       partial_index[term] = {(i * len_chunk) + doc_id: tf}
+                   else:
+                       partial_index[term][doc_id] = tf
+           # ordenar el índice parcial por término  y cada lista de postings por doc_id
+           partial_index = {term: dict(sorted(postings.items())) for term, postings in sorted(partial_index.items())}
+           # Escribir el índice parcial en memoria secundaria as a JSON file
+           with open( os.path.join(temp_block_dir, f"block_{i}.json"), "w", encoding="utf-8") as file:
+               json.dump(partial_index, file, indent=4)
+           self.doc_count += len_chunk
+           self.chuks_number = i + 1
+       self.merge_blocks(temp_block_dir)
+       # delete blocks carpeta entera
+       if os.path.exists(temp_block_dir):
+           shutil.rmtree(temp_block_dir)
+
+
+3. **Merge de Bloques:** Se realiza el merge de los bloques en memoria secundaria, se ordenan y se escriben en disco.
+
+
+
+
 ### 2.2 Ejecución óptima de consultas aplicando Similitud de Coseno
 ### 2.3 Explicación de la construcción del índice invertido en MongoDB
 
