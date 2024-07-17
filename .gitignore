@@ -9,6 +9,9 @@ data/fma_metadata/
 # generated indexes
 src/temp_indexes/
 
+# songs - .m4a
+songs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
