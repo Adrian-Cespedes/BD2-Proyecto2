@@ -208,6 +208,22 @@ Asi como en el caso de KNN Search, este algoritmo puede ser modificado para trab
 Aqui se muestra un ejemplo de Range Search en ejecución:
 ![image](https://upload.wikimedia.org/wikipedia/commons/9/9b/Range_search_animation.gif)
 
+#### 2.2.3 Maldición de la Dimensionalidad
+
+La maldición de la dimensionalidad es un fenómeno que ocurre cuando se trabaja con datos de alta dimensionalidad, en el cual la distancia entre los puntos se vuelve cada vez mas similar, lo que hace que los algoritmos de busqueda de vecinos mas cercanos y busqueda de rango se vuelvan ineficientes.
+
+Para evitar este problema se puede utilizar la técnica de reducción de dimensionalidad, la cual consiste en reducir la cantidad de dimensiones de los datos, manteniendo la mayor cantidad de información posible. Para este proyecto se utilizo la técnica de PCA (Principal Component Analysis) de la libreria sklearn.
+
+```python
+def reduce_dimensionality(features, n_components=0.99): 
+    pca = PCA(n_components=n_components)
+    reduced_features = pca.fit_transform(features)
+    joblib.dump(pca, 'pca_model.pkl')
+    return reduced_features
+```
+
+Esta reducción solo consta de 2 dimensiones para cada canción, lo que permite una mejor eficiencia en los algoritmos de busqueda. A pesar de el pequeño tamaño del dataset, basta para obtener un porcentaje de 99% de la varianza.
+
 ## 3. Frontend
 ![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/bd6f6a63-1698-4bbb-ad50-cdc8142acfa8)
 
