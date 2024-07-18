@@ -17,6 +17,9 @@ source ./start.sh
 
 ## 1. Introducción
 Desarrollar y optimizar algoritmos de búsqueda y recuperación de información basados en contenido, implementando un Índice Invertido para documentos de texto y una estructura multidimensional para imágenes y audio, con el fin de mejorar la eficiencia y precisión en un sistema de recomendación, además de describir el dominio de datos y la relevancia de la indexación en estos contextos.
+
+Aparte se añadio metodos y tecnicas de busqueda para busqueda de archivos multimedia, especificamente audio. Utilizando un data set de 2000 canciones se implemento un sistema de busqueda por similitud de audio, utilizando la libreria `librosa` para extraer las caracteristicas de las canciones, `rtree`  y  `FAISS` para la busqueda de los vecinos mas cercanos.
+
 #### Descripción del Dominio de Datos:
 ------------------------------------------
 #### Importancia de Aplicar Indexación:
