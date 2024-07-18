@@ -159,10 +159,51 @@ Para la busqueda de archivos multimedia se utilizo la estructura de datos RTREE,
 
 #### 2.2.1 KNN Search
 
+La función de busqueda por KNN consiste en obtener los vecinos mas cercanos a un punto de inicio, en este caso seria la canción a consultar. El algoritmo posee la siguiente logica:
 
+```python
+funcion KNN_Search(indice_datos, query, k):
+
+    c_dist = []
+    for p in indice_datos:
+        distance = euclidean_distance(point, query_point)
+        Añadir (point, distance) a c_dist U
+    
+    Ordenar c_dist en base a la distancia (de menor a mayor)
+    
+    n_vecinos = []
+    for i in range(k):
+        Añadir c_dist[i][0] a n_vecinos
+    
+    return n_vecinos
+```
+
+Este algoritmo puede ser modificado para trabajar con diversos indices, como lo serian los indices de `FAISS` o `RTREE`, aunque tambien se implementó una versión que no usa indices (Sequential Search), con el fin de comparar los tiempos de ejecución.
+
+Aqui se muestra un ejemplo de KNN Search en ejecución:
+![image](https://upload.wikimedia.org/wikipedia/commons/d/db/Nearest-neighbor_chain_algorithm_animated.gif)
 
 
 #### 2.2.2 Range Search 
+
+La función de busqueda por rango consiste en obtener todos los puntos que se encuentran dentro de un rango especificado.  El algoritmo posee la siguiente logica:
+
+```python
+funcion Range_Search(indice_datos, query, r):
+
+    n_vecinos = []
+    for p in indice_datos:
+        distance = euclidean_distance(point, query_point)
+        if distance <= r:
+            Añadir point a n_vecinos
+    
+    return n_vecinos
+```
+
+Asi como en el caso de KNN Search, este algoritmo puede ser modificado para trabajar con diversos indices,(FAISS, RTREE) o sin indices (Sequential Search).
+
+Aqui se muestra un ejemplo de Range Search en ejecución:
+![image](https://upload.wikimedia.org/wikipedia/commons/9/9b/Range_search_animation.gif)
 
 ## 3. Frontend
 ![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/bd6f6a63-1698-4bbb-ad50-cdc8142acfa8)
