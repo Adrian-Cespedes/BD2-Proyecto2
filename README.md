@@ -184,6 +184,8 @@ funcion KNN_Search(indice_datos, query, k):
 Este algoritmo puede ser modificado para trabajar con diversos indices, como lo serian los indices de `FAISS` o `RTREE`, aunque tambien se implementó una versión que no usa indices (Sequential Search), con el fin de comparar los tiempos de ejecución.
 
 Aqui se muestra un ejemplo de KNN Search en ejecución:
+
+
 ![image](https://upload.wikimedia.org/wikipedia/commons/d/db/Nearest-neighbor_chain_algorithm_animated.gif)
 
 
