@@ -11,14 +11,6 @@ class KNN_Secuencial:
         np_query = np.array(query)
         max_heap = []
 
-        # for idx, row in self.collection.iterrows():
-        #     dist = np.linalg.norm(np.array(row) - np_query)
-        #     if len(max_heap) < k:
-        #         heapq.heappush(max_heap, (-dist, idx))
-        #     else:
-        #         if -dist > max_heap[0][0]:
-        #             heapq.heapreplace(max_heap, (-dist, idx))
-
         for i in range(self.collection.shape[0]):
             dist = np.linalg.norm(np.array(self.collection[i]) - np_query)
             if len(max_heap) < k:
@@ -34,10 +26,12 @@ class KNN_Secuencial:
         np_query = np.array(query)
         results = []
 
-        for idx, row in self.collection.iterrows():
-            dist = np.linalg.norm(np.array(row) - np_query)
+        for i in range(self.collection.shape[0]):
+            dist = np.linalg.norm(np.array(self.collection[i]) - np_query)
             if dist <= r:
-                results.append((idx, dist))
+                results.append((i, dist))
+
+        results = sorted(results, key=lambda x: x[1])
         
         return results
     
@@ -47,11 +41,6 @@ class KNN_RTree:
         p = index.Property()
         p.dimension = collection.shape[1]
         self.idx = index.Index(properties=p)
-        # for idx, row in collection.iterrows():
-        #     point = tuple(row)
-        #     # Crear una bounding box para puntos 3D
-        #     bounding_box = point + point  # (minx, miny, minz, maxx, maxy, maxz)
-        #     self.idx.insert(idx, bounding_box)
 
         for i in range(self.collection.shape[0]):
             point = tuple(self.collection[i])
@@ -74,6 +63,9 @@ class KNN_RTree:
             dist = np.linalg.norm(np.array(self.collection[idx]) - np.array(query))
             if dist <= r:
                 results.append((idx, dist))
+
+        results = sorted(results, key=lambda x: x[1])
+
         return results
     
 class KNN_Faiss:
@@ -85,13 +77,13 @@ class KNN_Faiss:
         self.index.add(collection.astype(np.float32))
         
     def knnSearch(self, query, k):
-        query = np.array(query).astype(np.float32).reshape(1, -1)  # Asegurar que la consulta esté en el formato correcto
+        query = np.array(query).astype(np.float32).reshape(1, -1)
         distances, indices = self.index.search(query, k)
         results = [(indices[0][i], distances[0][i]) for i in range(k)]
         return results
     
     def rangeSearch(self, query, r):
-        query = np.array(query).astype(np.float32).reshape(1, -1)  # Asegurar que la consulta esté en el formato correcto
+        query = np.array(query).astype(np.float32).reshape(1, -1)
         distances, indices = self.index.search(query, self.collection.shape[0])
         results = [(indices[0][i], distances[0][i]) for i in range(self.collection.shape[0]) if distances[0][i] <= r**2]
         return results

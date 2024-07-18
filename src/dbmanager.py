@@ -87,10 +87,13 @@ class DataStoreManager:
     #     end_time = time.time()
     #     return result, end_time - start_time
 
-    def retrieve_media_knn(self, query, k):
+    def retrieve_media_knn(self, query, k, r, is_knn):
         start_time = time.time()
         query = reduce_new_input(query, self.pca)  # Usar segmentación en la entrada de consulta
-        result = self.stores[self.active_store].knnSearch(query, k)
+        if is_knn:
+            result = self.stores[self.active_store].knnSearch(query, k)
+        else:
+            result = self.stores[self.active_store].rangeSearch(query, r)
         end_time = time.time()
         for i in range(len(result)):
             result[i] = (self.mmfv_song_names[result[i][0]], result[i][1])

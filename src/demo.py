@@ -8,18 +8,18 @@ base_path = os.path.join(current_dir, os.pardir, "data")
 songs_path = os.path.join(current_dir, os.pardir, "songs")
 
 # data_path = os.path.join(base_path, "df_total.csv")
-data_path = os.path.join(base_path, "spotify_millsongdata_57650.csv")
+data_path = os.path.join(base_path, "spotify_millsongdata_1000.csv")
 mmdata_path = os.path.join(base_path, "NEW_reduced_features.csv")
 pca_model_path = os.path.join(base_path, "NEW_pca_model.pkl")
 # manager class
 df_headers = ["Artist", "Song", "Lyrics", "Score"]
 manager = DataStoreManager(data_path, df_headers, mmdata_path, pca_model_path, songs_path)
 
-n_boxes = 10
+n_boxes = 100
 
 
-def testFunc(audio, k, r):
-    result, time_taken = manager.retrieve_media_knn(audio, k)
+def testFunc(audio, k, r, is_knn):
+    result, time_taken = manager.retrieve_media_knn(audio, k, r, is_knn)
     # result -> (song_path + song_name, song_name, score)
     elementsVisible = []
     elementsHiddden = []
@@ -85,7 +85,8 @@ with gr.Blocks(title="Proyecto 2") as demo:
         with gr.Row():
             with gr.Column(scale=3):
                 audioInputLabel = gr.Audio(label="Audio:", type="filepath")
-                btn2 = gr.Button("Ejecutar")
+                btn2 = gr.Button("Ejecutar KNN")
+                btn3 = gr.Button("Ejecutar Range")
             with gr.Column(scale=2):
                 with gr.Row():
                     topKLabel2 = gr.Number(
@@ -129,10 +130,19 @@ with gr.Blocks(title="Proyecto 2") as demo:
         outputs=[dfResult, timeLabel],
     )
 
+    knn_state = gr.State(value=True)
+    range_state = gr.State(value=False)
+
     btn2.click(
         fn=testFunc,
-        inputs=[audioInputLabel, topKLabel2, rLabel],
+        inputs=[audioInputLabel, topKLabel2, rLabel, knn_state],
         # outputs=[dfResult, timeLabel],
+        outputs=outputAudios + [timeLabel],
+    )
+
+    btn3.click(
+        fn=testFunc,
+        inputs=[audioInputLabel, topKLabel2, rLabel, range_state],
         outputs=outputAudios + [timeLabel],
     )
 
