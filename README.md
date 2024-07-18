@@ -257,18 +257,22 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 | 4000               |        0.0106     |     0.0915           |
 | 8000               |        0.0256     |     0.2028           |
 | 16000              |        0.0332     |     0.4128           |
+| 32000              |        0.0063     |     0.6036           |
+| 57650              |        0.0213     |     1.7574           |
+
 
 
 La gráfica compara los tiempos de búsqueda entre dos métodos diferentes: MongoDB y el Índice Invertido, en función del número de documentos. Aquí se presenta un análisis conciso de los resultados:
 
-Desempeño de MongoDB (línea azul):
 ![tiempos_de_busqueda](https://github.com/user-attachments/assets/be5f8a91-b84e-4d1f-9994-c154591b1935)
 ![tiempos_de_busqueda_log](https://github.com/user-attachments/assets/8b842e91-871c-499e-8e6b-4466ec4c36e2)
 
+Desempeño de MongoDB (línea azul):
 Consistencia: Los tiempos de búsqueda se mantienen bajos y estables a medida que aumenta el número de documentos.
 Eficiencia: MongoDB maneja eficientemente búsquedas en conjuntos de datos grandes, con tiempos de respuesta mínimos incluso con 16000 documentos.
-Desempeño del Índice Invertido (línea naranja):
 
+
+Desempeño del Índice Invertido (línea naranja):
 Incremento Progresivo: Los tiempos de búsqueda aumentan considerablemente a medida que crece el número de documentos.
 Escalabilidad Limitada: El incremento lineal en el tiempo de búsqueda sugiere que el Índice Invertido es menos eficiente para conjuntos de datos grandes en comparación con MongoDB.
 
@@ -282,8 +286,42 @@ MongoDB demuestra ser más eficiente y escalable para búsquedas en grandes conj
 
 ### 4.2 Multimedia
 
+Las pruebas de busqueda multimedia se realizaron con un dataset de 2000 canciones, se comparo el tiempo de busqueda de los vecinos mas cercanos utilizando `rtree` y `FAISS` con la busqueda secuencial.
+
+| Palabras | Sequential (sec) | RTree (sec) | Faiss (sec) |
+|----------|------------------|-------------|-------------|
+| 200      | 1.5411           | 1.2407      | 1.3904      |
+| 400      | 1.7626           | 1.2671      | 1.3060      |
+| 800      | 1.7271           | 1.3438      | 1.5598      |
+| 1200     | 1.7480           | 1.6262      | 1.7280      |
+| 1600     | 2.3369           | 1.4294      | 1.6997      |
+| 2000     | 3.0378           | 1.3403      | 1.3089      |
+
 ![tiempos de busqueda2](https://github.com/user-attachments/assets/8c2a7fdb-6f91-40c0-ba1c-ebfb6919a2cf)
 ![tiempos de busqueda2_log](https://github.com/user-attachments/assets/5cbc1850-55bd-432c-94f1-45c65ebf46f0)
+
+
+Desempeño de Sequential KNN (línea azul):
+
+- **Incremento Progresivo**: Los tiempos de búsqueda aumentan considerablemente a medida que crece el número de documentos.
+- **Escalabilidad Limitada**: El aumento significativo en el tiempo de búsqueda sugiere que Sequential KNN es menos eficiente para conjuntos de datos grandes en comparación con RTree KNN y Faiss KNN.
+
+Desempeño de RTree KNN (línea naranja):
+
+- **Consistencia**: Los tiempos de búsqueda se mantienen bajos y relativamente estables a medida que aumenta el número de documentos.
+- **Eficiencia**: RTree KNN maneja eficientemente búsquedas en conjuntos de datos grandes, con tiempos de respuesta mínimos incluso con 2000 documentos.
+
+Desempeño de Faiss KNN (línea verde):
+
+- **Fluctuaciones Controladas**: Los tiempos de búsqueda muestran algunas fluctuaciones, pero en general se mantienen bajos.
+- **Buen Desempeño**: Faiss KNN también es eficiente y escalable, manteniendo tiempos de búsqueda bajos a través de diferentes tamaños de conjuntos de datos.
+
+Comparación General:
+
+- **Superioridad de RTree KNN y Faiss KNN**: En todos los puntos de datos, RTree KNN y Faiss KNN muestran tiempos de búsqueda significativamente más rápidos y estables en comparación con Sequential KNN.
+- **Necesidad de Optimización para Sequential KNN**: Sequential KNN podría requerir optimizaciones adicionales para mejorar su desempeño en grandes volúmenes de datos.
+
+
 
 
 
