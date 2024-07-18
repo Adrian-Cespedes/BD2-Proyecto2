@@ -1,4 +1,5 @@
 import os
+import struct
 import shutil
 import json
 import heapq
@@ -58,10 +59,13 @@ class InvertedIndex:
             }
 
             # Escribir el índice parcial en memoria secundaria as a JSON file
-            with open(
-                os.path.join(temp_block_dir, f"block_{i}.json"), "w", encoding="utf-8"
-            ) as file:
-                json.dump(partial_index, file, indent=4)
+            index_file = os.path.join(temp_block_dir, f"block_{i}.bin")
+            postings_file = os.path.join(temp_block_dir, f"posting_{i}.bin")
+            self.write_index_and_postings(partial_index, index_file=index_file, postings_file=postings_file)
+            # with open(
+            #     os.path.join(temp_block_dir, f"block_{i}.json"), "w", encoding="utf-8"
+            # ) as file:
+            #     json.dump(partial_index, file, indent=4)
 
             self.doc_count += len_chunk
             self.chuks_number = i + 1
@@ -79,11 +83,19 @@ class InvertedIndex:
         # Merge blocks into a single index por partes:
         min_heap = []
         json_files = [
-            os.path.join(temp_block_dir, f"block_{i}.json")
+            os.path.join(temp_block_dir, f"block_{i}.bin")
             for i in range(self.chuks_number)
         ]
-        file_terms = [self.load_next_term(filename, 1) for filename in json_files]
-        file_pointers = [1 for i in range(self.chuks_number)]
+        postings_file = [
+            os.path.join(temp_block_dir, f"posting_{i}.bin")
+            for i in range(self.chuks_number)
+        ]
+        file_terms = []
+        for i in range(len(json_files)):
+            file_terms.append(self.load_next_term(0, index_file = json_files[i], postings_file=postings_file[i]) )
+
+
+        file_pointers = [0 for i in range(self.chuks_number)]
 
         # Initialize heap with the first term from each block
         for i in range(self.chuks_number):
@@ -106,7 +118,7 @@ class InvertedIndex:
 
             # Load next term from the block used
             file_pointers[i] += 1
-            new_term = self.load_next_term(json_files[i], file_pointers[i])
+            new_term = self.load_next_term(file_pointers[i], json_files[i], postings_file[i])
             if new_term != None:
                 new_term_key = list(new_term.keys())[0]
                 heapq.heappush(min_heap, (new_term_key, i))
@@ -124,7 +136,7 @@ class InvertedIndex:
                     final_terms[term].update(file_terms[temp_i][temp_t])
                     file_pointers[temp_i] += 1
                     new_term = self.load_next_term(
-                        json_files[temp_i], file_pointers[temp_i]
+                        file_pointers[temp_i], json_files[temp_i], postings_file[temp_i] 
                     )
                     if new_term != None:
                         new_term_key = list(new_term.keys())[0]
@@ -137,7 +149,6 @@ class InvertedIndex:
                 }
 
                 # Escribir el índice parcial en disco
-                # self.write_json_file(dict(final_terms), os.path.join(temp_index_dir, "index_build.json"))
                 index_page += 1
                 file_name = os.path.join(
                     temp_index_dir_pages, f"index_{index_page}.json"
@@ -154,33 +165,105 @@ class InvertedIndex:
             }
             self.write_file(dict(final_terms), file_name)
 
-    def load_next_term(self, filename, num_term):
-        with open(filename, "r") as file:
-            data = json.load(file)
+    def load_next_term(self, index, index_file, postings_file, term_max_length=100):
+        # tamaño de registro: term_max_length + 4 + 4 bytes
+        entry_size = term_max_length + 4 + 4
+        term_dict = {}
 
-        count = 0
-        for key, value in data.items():
-            count += 1
-            if count == num_term:
-                return {key: value}
-        return None
+        #tamaño del archivo
+        file_size = os.path.getsize(index_file)
+        
+        #número total de entradas
+        total_entries = file_size // entry_size
+        
+        if index < 0 or index >= total_entries:
+            return None
 
-    def write_json_file(self, data, filename):
-        data_str = json.dumps(data, indent=4)
+        with open(index_file, 'rb') as idx_f:
+            # Calcular la posición del término deseado
+            idx_f.seek(index * entry_size)
+            
+            # Leer el término, la posición y el tamaño
+            idx_term_bytes = idx_f.read(term_max_length)
+            position = struct.unpack('I', idx_f.read(4))[0]
+            size = struct.unpack('I', idx_f.read(4))[0]
+            
+            term = idx_term_bytes.decode('utf-8').strip()
+            
+            with open(postings_file, 'rb') as post_f:
+                post_f.seek(position)
+                postings_bytes = post_f.read(size)
+                postings_str = postings_bytes.decode('utf-8')
+                postings = json.loads(postings_str)
+                term_dict[term] = postings
+        
+        return term_dict
+    
 
-        # verificar si existe el archivo
-        if not os.path.exists(filename):
-            with open(filename, "w") as file:
-                file.write(data_str)
-        else:
-            with open(filename, "r+") as file:
-                file.seek(0, 2)  # mover el puntero al final del archivo
+    def write_index_and_postings(self, dict_data, index_file, postings_file, term_max_length=100):  # longitud de stirng maxima = 40
+        with open(index_file, 'wb') as idx_f, open(postings_file, 'wb') as post_f:
+            for term, postings in dict_data.items():
+                # Convertir el diccionario de postings a un string JSON
+                postings_str = json.dumps(postings)
+                postings_bytes = postings_str.encode('utf-8')
 
-                file.seek(file.tell() - 1)
-                file.write(",")
-                file.write(data_str[1:-1])  # Eliminar {}
-                file.write("}")
+                # Obtener la posición y el tamaño de la lista de postings
+                position = post_f.tell()
+                size = len(postings_bytes)
 
+                # Escribir la lista de postings en el archivo de postings
+                post_f.write(postings_bytes)
+
+                # Asegurarse de que el término tenga un tamaño fijo
+                term_padded = term.ljust(term_max_length)
+                term_bytes = term_padded.encode('utf-8')
+
+                # Escribir el término, la posición y el tamaño en el archivo de índices
+                idx_f.write(term_bytes)
+                idx_f.write(struct.pack('I', position))
+                idx_f.write(struct.pack('I', size))
+
+
+    def load_next_doc(self, index, docs_file):
+        # Cada entrada en el archivo tiene el tamaño de doc_id_max_length + 8 bytes (para el double)
+        entry_size = 4 + 4 # int + float
+        doc_dict = {}
+        
+        #tamaño del archivo
+        file_size = os.path.getsize(docs_file)
+        
+        #número total de entradas
+        total_entries = file_size // entry_size
+        
+        if index < 0 or index >= total_entries:
+            return None
+
+        with open(docs_file, 'rb') as file:
+            # Calcular la posición del término deseado
+            file.seek(index * entry_size)
+            
+            # Leer el doc_id y el valor
+            doc_id = struct.unpack('I', file.read(4))[0]
+            value = struct.unpack('f', file.read(4))[0]
+        
+            doc_dict[doc_id] = value
+        
+        return doc_dict
+
+
+    def write_docs(slef, json_data, docs_file):
+        with open(docs_file, 'wb') as file:
+            for doc_id, value in json_data.items():
+                # # Asegurarse de que el doc_id tenga un tamaño fijo
+                # doc_id_padded = doc_id.ljust(doc_id_max_length)
+                # doc_id_bytes = doc_id_padded.encode('utf-8')
+                
+                # # Escribir el doc_id y el valor en el archivo binario
+                # file.write(doc_id_bytes)
+                file.write(struct.pack('I', doc_id))
+                file.write(struct.pack('f', value))
+
+    
     def write_file(self, data, filename):
         with open(filename, "w", encoding="utf-8") as file:
             json.dump(data, file, indent=4)
@@ -224,9 +307,9 @@ class InvertedIndex:
                         )
                         # doc_lengths[doc_id] += tf_idf[term][doc_id] ** 2
                         if doc_id in doc_lengths:
-                            doc_lengths[doc_id] += tf_idf[term][doc_id] ** 2
+                            doc_lengths[doc_id] += (tf_idf[term][doc_id] ** 2)
                         else:
-                            doc_lengths[doc_id] = tf_idf[term][doc_id] ** 2
+                            doc_lengths[doc_id] = (tf_idf[term][doc_id] ** 2)
 
             # write update page
             self.write_file(dict(tf_idf), file)
@@ -241,7 +324,8 @@ class InvertedIndex:
                 doc_id: sum_tfidf for doc_id, sum_tfidf in sorted(doc_lengths.items())
             }
             file_docs = os.path.join(temp_docs_dir, f"docpage_{i}.json")
-            self.write_file(dict(doc_lengths), file_docs)
+            # write_docs(slef, json_data, docs_file, doc_id_max_length=8):
+            self.write_docs(dict(doc_lengths), file_docs)
             doc_lengths.clear()
 
         # Merge docs_id
@@ -283,9 +367,9 @@ class InvertedIndex:
 
                         for doc_id, tf_idf_val in tf_idf[term].items():
                             if doc_id in scores:
-                                scores[doc_id] += query_tf_idf[term] * tf_idf_val
+                                scores[doc_id] += (query_tf_idf[term] * tf_idf_val)
                             else:
-                                scores[doc_id] = query_tf_idf[term] * tf_idf_val
+                                scores[doc_id] = (query_tf_idf[term] * tf_idf_val)
 
         query_norm = np.sqrt(sum(val**2 for val in query_tf_idf.values()))
         temp_docs_pages = os.path.join(temp_index_dir, "docs_norms")
@@ -316,10 +400,10 @@ class InvertedIndex:
             for i in range(len(os.listdir(temp_docs_dir)))
         ]
         file_terms = [
-            self.convert_key_to_int(self.load_next_term(filename, 1))
+            self.convert_key_to_int(self.load_next_doc(0, filename))
             for filename in json_files
         ]
-        file_pointers = [1 for _ in range(len(os.listdir(temp_docs_dir)))]
+        file_pointers = [0 for _ in range(len(os.listdir(temp_docs_dir)))]
 
         # Initialize heap with the first term from each block
         for i in range(len(os.listdir(temp_docs_dir))):
@@ -340,7 +424,7 @@ class InvertedIndex:
                 final_terms[doc] = tf_idf
 
             file_pointers[i] += 1
-            new_term = self.load_next_term(json_files[i], file_pointers[i])
+            new_term = self.load_next_doc(file_pointers[i], json_files[i],)
             if new_term != None:
                 new_term = self.convert_key_to_int(new_term)
                 heapq.heappush(min_heap, (list(new_term.keys())[0], i))
@@ -357,9 +441,7 @@ class InvertedIndex:
                     # Actualizar tf_idf
                     final_terms[doc] += file_terms[temp_i][temp_t]
                     file_pointers[temp_i] += 1
-                    new_term = self.load_next_term(
-                        json_files[temp_i], file_pointers[temp_i]
-                    )
+                    new_term = self.load_next_doc(file_pointers[temp_i], json_files[temp_i])
                     if new_term != None:
                         new_term = self.convert_key_to_int(new_term)
                         heapq.heappush(min_heap, (list(new_term.keys())[0], temp_i))
@@ -398,62 +480,17 @@ class InvertedIndex:
 
 # Ejemplo de uso
 if __name__ == "__main__":
-    dataton = os.path.join(base_path, "spotify_millsongdata_1000.csv")
+    dataton = os.path.join(base_path, "spotify_millsongdata_32000.csv")
     index = InvertedIndex(dataton)
     query1 = """
-"Take it easy with me, please  
-Touch me gently like a summer evening breeze  
-Take your time, make it slow  
-Andante, Andante  
-Just let the feeling grow  
-  
-Make your fingers soft and light  
-Let your body be the velvet of the night  
-Touch my soul, you know how  
-Andante, Andante  
-Go slowly with me now  
-  
-I'm your music  
-(I am your music and I am your song)  
-I'm your song  
-(I am your music and I am your song)  
-Play me time and time again and make me strong  
-(Play me again 'cause you're making me strong)  
-Make me sing, make me sound  
-(You make me sing and you make me)  
-Andante, Andante  
-Tread lightly on my ground  
-Andante, Andante  
-Oh please don't let me down  
-  
-There's a shimmer in your eyes  
-Like the feeling of a thousand butterflies  
-Please don't talk, go on, play  
-Andante, Andante  
-And let me float away  
-  
-I'm your music  
-(I am your music and I am your song)  
-I'm your song  
-(I am your music and I am your song)  
-Play me time and time again and make me strong  
-(Play me again 'cause you're making me strong)  
-Make me sing, make me sound  
-(You make me sing and you make me)  
-Andante, Andante  
-Tread lightly on my ground  
-Andante, Andante  
-Oh please don't let me down  
-  
-Make me sing, make me sound  
-(You make me sing and you make me)  
-Andante, Andante  
-Tread lightly on my ground  
-Andante, Andante  
-Oh please don't let me down  
-Andante, Andante  
-Oh please don't let me down
-
+"Look at her face, it's a wonderful face  
+And it means something special to me  
+Look at the way that she smiles when she sees me  
+How lucky can one fellow be?   
 """
-    result = index.retrieve(query1, 5)
-    print(result)
+    x = 0
+    while x != 2:
+        result = index.retrieve(query1, 5)
+        print(result)
+        query1 = input("Result: ")
+        x = int(input("X: "))
