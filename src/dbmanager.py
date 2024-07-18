@@ -4,21 +4,24 @@ from invertedIndexClass_new_version import InvertedIndex
 # from invertedIndexRAM import InvertedIndexRAM
 from mongoClass import Mongo
 from multimediaIndex import KNN_Secuencial, KNN_RTree, KNN_Faiss
-from multimediaFuncs import load_features, reduce_new_segmented_input, extract_segmented_features, reduce_new_input
+from multimediaFuncs import load_features, reduce_new_input
 import librosa
 import time
 
 
 class DataStoreManager:
     # mmfv = MultiMedia Feature Vectors
-    def __init__(self, data_filename, df_headers=[], mmfv_filename="", pca_model_filename=""):
+    def __init__(self, data_filename, df_headers=[], mmfv_filename="", pca_model_filename="", songs_path=""):
         # ['artist', 'song', 'link', 'text']
         self.data = data_filename  # path
         self.mmfv, self.mmfv_song_names = load_features(mmfv_filename)
+        # self.mmfv = self.mmfv[:2000, :]
+        print("MMFV shape: ", self.mmfv.shape)
         self.df_headers = df_headers
         self.pca = joblib.load(pca_model_filename)
+        self.songs_path = songs_path
         self.stores = {
-            # "inverted_index": InvertedIndex(self.data),   
+            "inverted_index": InvertedIndex(self.data),
             # "inverted_index_ram": InvertedIndexRAM(self.data),
             "mongo": Mongo(self.data),
             "knn_secuencial": KNN_Secuencial(self.mmfv),
@@ -88,8 +91,10 @@ class DataStoreManager:
         start_time = time.time()
         query = reduce_new_input(query, self.pca)  # Usar segmentación en la entrada de consulta
         result = self.stores[self.active_store].knnSearch(query, k)
+        end_time = time.time()
         for i in range(len(result)):
             result[i] = (self.mmfv_song_names[result[i][0]], result[i][1])
-        end_time = time.time()
+        # return every songs_path + song_name + score as tuple in an array
+        result = [(self.songs_path + "/" + song_name, song_name, score) for song_name, score in result]
         return result, end_time - start_time
 

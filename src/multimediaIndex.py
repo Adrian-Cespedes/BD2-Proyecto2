@@ -59,20 +59,19 @@ class KNN_RTree:
             self.idx.insert(i, bounding_box)
         
     def knnSearch(self, query, k):
-        query_point = tuple(query)
+        query_point = tuple(query[0])
         bounding_box = query_point + query_point
         nearest = list(self.idx.nearest(bounding_box, k))
-        print("k = ", 1)
-        print("nearest", nearest)
-        results = [(i, np.linalg.norm(np.array(self.collection.iloc[i]) - np.array(query))) for i in nearest]
+        results = [(i, np.linalg.norm(np.array(self.collection[i]) - np.array(query))) for i in nearest]
         return sorted(results, key=lambda x: x[1])
     
+    
     def rangeSearch(self, query, r):
-        query_point = tuple(query)
+        query_point = tuple(query[0])
         bounding_box = query_point + query_point
         results = []
         for idx in self.idx.intersection(bounding_box):
-            dist = np.linalg.norm(np.array(self.collection.iloc[idx]) - np.array(query))
+            dist = np.linalg.norm(np.array(self.collection[idx]) - np.array(query))
             if dist <= r:
                 results.append((idx, dist))
         return results

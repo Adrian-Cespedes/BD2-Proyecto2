@@ -5,7 +5,8 @@ from youtubesearchpython import VideosSearch
 import time
 
 # Leer el archivo CSV
-df = pd.read_csv("~/Desktop/bd2/BD2-Proyecto2/data/spotify_millsongdata_1000.csv")
+df = pd.read_csv("~/Desktop/bd2/BD2-Proyecto2/data/spotify_millsongdata_2000.csv")
+# df = df.iloc[1001:2001]
 artist_n_song = df.iloc[:, :2]
 
 # Crear una carpeta para las descargas si no existe
