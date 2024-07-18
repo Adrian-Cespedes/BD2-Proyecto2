@@ -255,8 +255,8 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 | 8000               |        0.0256     |     0.2028           |
 | 16000              |        0.0332     |     0.4128           |
 
+![tiempos_de_busqueda](https://github.com/user-attachments/assets/be5f8a91-b84e-4d1f-9994-c154591b1935)
 
-![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/201c504b-2e86-4a6d-a477-54a3e9703c9f)
 
 La gráfica compara los tiempos de búsqueda entre dos métodos diferentes: MongoDB y el Índice Invertido, en función del número de documentos. Aquí se presenta un análisis conciso de los resultados:
 
