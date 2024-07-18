@@ -255,12 +255,14 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 | 8000               |        0.0256     |     0.2028           |
 | 16000              |        0.0332     |     0.4128           |
 
-![tiempos_de_busqueda](https://github.com/user-attachments/assets/be5f8a91-b84e-4d1f-9994-c154591b1935)
+
 
 
 La gráfica compara los tiempos de búsqueda entre dos métodos diferentes: MongoDB y el Índice Invertido, en función del número de documentos. Aquí se presenta un análisis conciso de los resultados:
 
 Desempeño de MongoDB (línea azul):
+![tiempos_de_busqueda](https://github.com/user-attachments/assets/be5f8a91-b84e-4d1f-9994-c154591b1935)
+![[tiempos_de_busqueda_log](https://github.com/user-attachments/assets/8b842e91-871c-499e-8e6b-4466ec4c36e2)
 
 Consistencia: Los tiempos de búsqueda se mantienen bajos y estables a medida que aumenta el número de documentos.
 Eficiencia: MongoDB maneja eficientemente búsquedas en conjuntos de datos grandes, con tiempos de respuesta mínimos incluso con 16000 documentos.
