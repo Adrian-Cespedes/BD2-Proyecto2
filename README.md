@@ -245,6 +245,9 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 * Tiempo de Procesamiento: En la parte inferior de la interfaz, se muestra el tiempo que tomó realizar la consulta, ofreciendo una referencia sobre la eficiencia del sistema.
 
 ## 4. Experimentación
+
+### 4.1 Documentos
+
 - Tablas y gráficos de los resultados experimentales
 
 |       Palabras     |      Mongo(sec)   | Inverted Index (sec) |
@@ -254,8 +257,6 @@ Implementación Propia: Utilizando el índice invertido desarrollado en este pro
 | 4000               |        0.0106     |     0.0915           |
 | 8000               |        0.0256     |     0.2028           |
 | 16000              |        0.0332     |     0.4128           |
-
-
 
 
 La gráfica compara los tiempos de búsqueda entre dos métodos diferentes: MongoDB y el Índice Invertido, en función del número de documentos. Aquí se presenta un análisis conciso de los resultados:
@@ -278,6 +279,11 @@ Necesidad de Optimización: El Índice Invertido podría requerir optimizaciones
 
 Conclusión sobre los resultados obtenidos
 MongoDB demuestra ser más eficiente y escalable para búsquedas en grandes conjuntos de documentos en comparación con el Índice Invertido, que muestra un aumento considerable en el tiempo de búsqueda a medida que crece el número de documentos.
+
+### 4.2 Multimedia
+
+![tiempos de busqueda2](https://github.com/user-attachments/assets/8c2a7fdb-6f91-40c0-ba1c-ebfb6919a2cf)
+![tiempos de busqueda2_log](https://github.com/user-attachments/assets/5cbc1850-55bd-432c-94f1-45c65ebf46f0)
 
 
 
