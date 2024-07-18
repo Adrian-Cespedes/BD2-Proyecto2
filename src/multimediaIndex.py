@@ -85,7 +85,7 @@ class KNN_Faiss:
     def rangeSearch(self, query, r):
         query = np.array(query).astype(np.float32).reshape(1, -1)
         distances, indices = self.index.search(query, self.collection.shape[0])
-        results = [(indices[0][i], distances[0][i]) for i in range(self.collection.shape[0]) if distances[0][i] <= r**2]
+        results = [(indices[0][i], distances[0][i]) for i in range(self.collection.shape[0]) if distances[0][i] <= r]
         return results
 
 # Ejemplo de uso

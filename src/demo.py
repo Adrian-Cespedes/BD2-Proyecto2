@@ -50,7 +50,7 @@ with gr.Blocks(title="Proyecto 2") as demo:
     """
     )
     
-    with gr.Tab("Parte 1"):
+    with gr.Tab("Parte 1") as p1:
         with gr.Row():
             with gr.Column(scale=2):
                 queryLabel = gr.Textbox(label="Ingrese la consulta:", lines=1)
@@ -81,7 +81,9 @@ with gr.Blocks(title="Proyecto 2") as demo:
                 height=400,
             )
 
-    with gr.Tab("Parte 2"):
+    p1.select(fn=manager.set_active_store, inputs=[techniqueLabel1], outputs=[])
+
+    with gr.Tab("Parte 2") as p2:
         with gr.Row():
             with gr.Column(scale=3):
                 audioInputLabel = gr.Audio(label="Audio:", type="filepath")
@@ -113,6 +115,8 @@ with gr.Blocks(title="Proyecto 2") as demo:
                     outputAudios.append(temp)
                     temp = gr.Audio(type="filepath", visible=False)
                     outputAudios.append(temp)
+
+    p2.select(fn=manager.set_active_store, inputs=[techniqueLabel2], outputs=[])
 
     timeLabel = gr.Markdown("### Execution time: ... seconds")
 
