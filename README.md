@@ -207,8 +207,7 @@ funcion Range_Search(indice_datos, query, r):
 
 Asi como en el caso de KNN Search, este algoritmo puede ser modificado para trabajar con diversos indices,(FAISS, RTREE) o sin indices (Sequential Search).
 
-Aqui se muestra un ejemplo de Range Search en ejecución:
-![image](https://upload.wikimedia.org/wikipedia/commons/9/9b/Range_search_animation.gif)
+En el caso del range search con RTree no se consideran las canciones que no esten en el cuadradante de query, lo que da una ventaja considerable respecto a las demas implementaciones probadas.
 
 #### 2.2.3 Maldición de la Dimensionalidad
 
