@@ -37,8 +37,10 @@ Desarrollar y optimizar algoritmos de búsqueda y recuperación de información 
 4. **Escalabilidad:**
    - **Manejo de Volumen de Datos:** Sistema de indexación escalables en memoria secundaria.
 
-## 2. Backend: Índice Invertido
-### 2.1 Construcción del índice invertido en memoria secundaria
+## 2. Backend
+
+### 2.1 Índice Invertido
+#### 2.1.1 Construcción del índice invertido en memoria secundaria
 En el indice invertido se opto por usar SPIMI, con la optimizaciones de :
 -  **Buffer de bloques** : Se utilizo un buffer de bloques para la escritura de los bloques en memoria secundaria, esto con el fin de reducir la cantidad de escrituras y accesos en disco.
 -  **Terminos directos** : Se evita utilizar un diccionario para almacenar los terminos, en su lugar se utilizan los docID directamente en el bloque. Esto con el fin de reducir el uso de memoria y la cantidad de accesos a disco.
@@ -89,7 +91,7 @@ def build_index(self):
 3. **Merge de Bloques:** Se realiza el merge pero como los indices ya se guardan ordenados por terminos, la construccion de manera ordenada por terminos y docID se realiza de manera eficiente.
 
 
-### 2.2 Ejecución óptima de consultas aplicando Similitud de Coseno
+#### 2.2.2 Ejecución óptima de consultas aplicando Similitud de Coseno
 Para la ejecución optima de consultas utilizando similitud de coseno se utilizo la siguiente logica:
 
 1. Obtener el vector de consulta y normalizarlo.
@@ -120,7 +122,7 @@ return sorted_scores[:k] if sorted_scores else None
 Esto permite leer los  bloques que contienen
 
 
-### 2.3 Explicación de la construcción del índice invertido en MongoDB
+#### 2.2.3 Explicación de la construcción del índice invertido en MongoDB
 
 La creación del indice invertido en MongoDB es relativamente simple, se requiere de una base de datos y una colección. En este caso se utilizo python para toda la configuración y creación:
 
@@ -150,6 +152,17 @@ def retrieve(self, query, k):
 ```
 
 Esta funcion permite recibir una query, la cual es una caden de texto sin procesar, y un valor k. El cual busca retornar los k documentos mas relevantes respecto a la query. Para esto la funcion de `find` recibe como parametro la query y el score de relevancia, para luego ordenarlos y limitarlos a k.
+
+### 2.2 Busqueda Multimedia
+
+Para la busqueda de archivos multimedia se utilizo la estructura de datos RTREE, la cual posee una implementacion en python llamada `rtree`. Esta estructura de datos permite realizar busquedas de rango y knn de manera eficiente. Aunque tambien se comparo con otra liberia llamada `FAISS` desarollada por facebook, esta libreria permite utilizar varios indices multidiemnsionales, pero en este caso se utilizo solo el indice de `IndexFlatL2`.
+
+#### 2.2.1 KNN Search
+
+
+
+
+#### 2.2.2 Range Search 
 
 ## 3. Frontend
 ![image](https://github.com/Adrian-Cespedes/BD2-Proyecto2/assets/130480550/bd6f6a63-1698-4bbb-ad50-cdc8142acfa8)
