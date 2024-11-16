@@ -1,4 +1,4 @@
-# BD2-Proyecto2
+# PyFusionBD
 Proyecto 2 para el curso de Base de Datos 2
 
 **Integrantes**
